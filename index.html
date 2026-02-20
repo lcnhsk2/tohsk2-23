@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HSK Level 2 • Doraemon (Tab Listening & Reading)</title>
+    <title>HSK Level 2 • Doraemon (Navigasi & Preview)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -205,7 +205,35 @@
             cursor: pointer;
             color: #1d3e5e;
         }
-        .btn-submit {
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+        .nav-btn {
+            background: #3b9bd6;
+            border: none;
+            font-size: 1.8rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            text-shadow: 2px 2px 0 #1d5a7a;
+            border-bottom: 6px solid #1d5a7a;
+            cursor: pointer;
+            flex: 1;
+            transition: 0.07s;
+        }
+        .nav-btn:active {
+            border-bottom-width: 2px;
+            transform: translateY(4px);
+        }
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .btn-preview {
             background: #f5a623;
             border: none;
             font-size: 2rem;
@@ -217,17 +245,11 @@
             border-bottom: 8px solid #b35f00;
             cursor: pointer;
             width: 100%;
-            transition: 0.07s;
-            margin-top: 15px;
-            font-family: inherit;
+            margin-top: 20px;
         }
-        .btn-submit:active {
+        .btn-preview:active {
             border-bottom-width: 2px;
             transform: translateY(6px);
-        }
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
         }
         .modal-start {
             position: fixed;
@@ -336,6 +358,35 @@
             padding: 8px;
             margin-bottom: 15px;
         }
+        /* preview */
+        .preview-grid {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #fff5d6;
+            border-radius: 30px;
+        }
+        .preview-item {
+            background: white;
+            border-radius: 30px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 15px solid;
+        }
+        .preview-item.correct {
+            border-left-color: #2e7d32;
+            background: #e8f5e9;
+        }
+        .preview-item.wrong {
+            border-left-color: #c62828;
+            background: #ffebee;
+        }
+        .preview-question {
+            font-weight: bold;
+        }
+        .preview-answer {
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -351,8 +402,8 @@
             document.addEventListener('cut', e => e.preventDefault());
             document.addEventListener('paste', e => e.preventDefault());
 
-            // Data mentah (sama seperti sebelumnya, 35 soal)
-            const rawQuestions = [
+            // Data mentah (35 soal)
+            const rawListening = [
                 { no: 21, type: 'mc3', part: 'listening', question: '你要去中国？哪天的飞机？男：就是今天中午。问：男的什么时候去中国？', options: ['A 今天中午', 'B 明天中午', 'C 后天中午'], answer: 'A' },
                 { no: 22, type: 'mc3', part: 'listening', question: '男：再有十分钟船就要开了，你朋友怎么还没到？女：我也不知道，我给他打个电话问问。问：女的要给谁打电话？', options: ['A 丈夫', 'B 医生', 'C 朋友'], answer: 'C' },
                 { no: 23, type: 'mc3', part: 'listening', question: '女：你喜欢喝咖啡吗？男：不太喜欢，我爱喝茶。问：男的爱喝什么？', options: ['A 茶', 'B 牛奶', 'C 咖啡'], answer: 'A' },
@@ -367,7 +418,9 @@
                 { no: 32, type: 'mc3', part: 'listening', question: '女：我们要了几个菜了？男：我看看，现在是七个。女：好，再要一个鱼就可以了，就这些，谢谢。男：不客气。问：他们最可能在哪儿？', options: ['A 水果店', 'B 饭店里', 'C 妹妹家'], answer: 'B' },
                 { no: 33, type: 'mc3', part: 'listening', question: '男：你看那块儿手表怎么样？我弟弟会不会喜欢？女：很漂亮，但是太贵了。男：两百块，不贵。女：你再看看，那是两千，你少说了一个零。问：男的想给谁买手表？', options: ['A 弟弟', 'B 服务员', 'C 汉语老师'], answer: 'A' },
                 { no: 34, type: 'mc3', part: 'listening', question: '女：八点了，怎么还不起床？男：让我再睡二十分钟。女：二十分钟？你不去上班了？男：今天是星期六。问：女的想让男的做什么？', options: ['A 游泳', 'B 起床', 'C 打篮球'], answer: 'B' },
-                { no: 35, type: 'mc3', part: 'listening', question: '男：明天你去吗？女：不去了，我明天上午有课。男：明天星期日，怎么还有课？女：是去学开车。问：女的为什么明天不能去？', options: ['A 要卖报纸', 'B 要去上课', 'C 要去唱歌'], answer: 'B' },
+                { no: 35, type: 'mc3', part: 'listening', question: '男：明天你去吗？女：不去了，我明天上午有课。男：明天星期日，怎么还有课？女：是去学开车。问：女的为什么明天不能去？', options: ['A 要卖报纸', 'B 要去上课', 'C 要去唱歌'], answer: 'B' }
+            ];
+            const rawReading = [
                 { no: 41, type: 'mc6', part: 'reading', question: '对不起，我现在很忙，没（ ）。', options: ['A 时间', 'B 机场', 'C 开始', 'D 生病', 'E 贵', 'F 从'], answer: 'A' },
                 { no: 42, type: 'mc6', part: 'reading', question: '电影就要（ ）了，你们快点儿进去吧。', options: ['A 时间', 'B 机场', 'C 开始', 'D 生病', 'E 贵', 'F 从'], answer: 'C' },
                 { no: 43, type: 'mc6', part: 'reading', question: '喂，我已经（ ）教室出来了，你在哪儿呢？', options: ['A 时间', 'B 机场', 'C 开始', 'D 生病', 'E 贵', 'F 从'], answer: 'F' },
@@ -390,16 +443,25 @@
                 { no: 60, type: 'mc5', part: 'reading', question: '507，左边第一个。', options: ['A 你知道“姓”怎么写吗？', 'B 我在路上买了点儿苹果。', 'C 你怎么会认识那个孩子？', 'D 颜色不错，比黑的好看。', 'E 你好，请问李小姐住哪个房间？'], answer: 'E' }
             ];
 
-            // Pisahkan berdasarkan part
-            const listeningQuestions = rawQuestions.filter(q => q.part === 'listening');
-            const readingQuestions = rawQuestions.filter(q => q.part === 'reading');
+            // Fungsi pengacakan (Fisher-Yates)
+            function shuffleArray(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
 
-            // State per bagian
+            // Salin dan acak setiap bagian
+            let listeningQuestions = shuffleArray([...rawListening]);
+            let readingQuestions = shuffleArray([...rawReading]);
+
+            // State jawaban per bagian (urutan sesuai acakan)
             let listeningAnswers = new Array(listeningQuestions.length).fill(null);
             let readingAnswers = new Array(readingQuestions.length).fill(null);
             let listeningCurrent = 0;
             let readingCurrent = 0;
-            let activeTab = 'listening'; // 'listening' atau 'reading'
+            let activeTab = 'listening'; // mulai dari listening
 
             let testStarted = false;
             let testFinished = false;
@@ -428,7 +490,7 @@
                 perSoalTimerInterval = null;
             }
 
-            // Fungsi untuk mendapatkan soal dan jawaban saat ini berdasarkan tab
+            // Mendapatkan data bagian aktif
             function getCurrentData() {
                 if (activeTab === 'listening') {
                     return {
@@ -447,69 +509,62 @@
                 }
             }
 
-            // Fungsi untuk menyimpan jawaban dan lanjut di bagian yang sama
-            function submitJawaban() {
+            // Simpan jawaban dari radio ke state (dipanggil saat change)
+            function saveCurrentAnswer(value) {
                 const data = getCurrentData();
-                if (data.currentIdx >= data.questions.length) return; // sudah habis
-
-                const selected = document.querySelector('input[name="soal"]:checked');
-                if (!selected) {
-                    alert('Pilih jawaban dulu ya!');
-                    return false;
+                if (data.currentIdx < data.questions.length) {
+                    data.setAnswer(data.currentIdx, value);
                 }
-                // Simpan jawaban
-                data.setAnswer(data.currentIdx, selected.value);
-
-                // Increment indeks bagian jika masih ada
-                if (activeTab === 'listening') {
-                    if (listeningCurrent + 1 < listeningQuestions.length) {
-                        listeningCurrent++;
-                    } else {
-                        // sudah habis, bisa nonaktifkan atau biarkan
-                    }
-                } else {
-                    if (readingCurrent + 1 < readingQuestions.length) {
-                        readingCurrent++;
-                    } else {
-                        // habis
-                    }
-                }
-
-                // Reset timer per soal
-                perSoalTimeLeft = 60;
-
-                // Render ulang (dengan tab yang sama)
-                renderSoal();
-                return true;
             }
 
-            // Fungsi lanjut karena waktu habis (jawaban null)
-            function perSoalWaktuHabis() {
-                if (testFinished) return;
-                // Jawaban tidak diisi => null (sudah default)
-                // Increment indeks bagian
-                if (activeTab === 'listening') {
-                    if (listeningCurrent + 1 < listeningQuestions.length) {
+            // Navigasi
+            function goToPrev() {
+                const data = getCurrentData();
+                if (data.currentIdx > 0) {
+                    if (activeTab === 'listening') {
+                        listeningCurrent--;
+                    } else {
+                        readingCurrent--;
+                    }
+                    perSoalTimeLeft = 60;
+                    renderSoal();
+                }
+            }
+
+            function goToNext() {
+                const data = getCurrentData();
+                if (data.currentIdx + 1 < data.questions.length) {
+                    if (activeTab === 'listening') {
                         listeningCurrent++;
                     } else {
-                        // habis, mungkin pindah tab? biarkan saja
-                    }
-                } else {
-                    if (readingCurrent + 1 < readingQuestions.length) {
                         readingCurrent++;
-                    } else {
-                        // habis
                     }
+                    perSoalTimeLeft = 60;
+                    renderSoal();
+                } else {
+                    // jika sudah di akhir bagian, coba pindah tab ke reading jika listening selesai
+                    if (activeTab === 'listening' && readingQuestions.length > 0) {
+                        // pindah ke reading
+                        activeTab = 'reading';
+                        perSoalTimeLeft = 60;
+                        renderSoal();
+                    }
+                    // jika reading sudah habis, mungkin tampilkan preview?
                 }
-                perSoalTimeLeft = 60;
-                renderSoal();
+            }
+
+            // Timer per soal habis
+            function perSoalWaktuHabis() {
+                if (testFinished) return;
+                // otomatis pindah ke next (jawaban tetap null)
+                goToNext();
             }
 
             function globalWaktuHabis() {
                 if (testFinished) return;
                 clearAllIntervals();
                 testFinished = true;
-                tampilkanLaporan();
+                tampilkanPreview(); // langsung preview kalau waktu habis
             }
 
             function startTimers() {
@@ -560,7 +615,7 @@
                     if (input.value.trim() !== '') {
                         userName = input.value.trim();
                     } else {
-                        userName = 'Peserta';
+                        userName = '姓名';
                     }
                     document.getElementById('modalStart').style.display = 'none';
                     startTest();
@@ -570,7 +625,7 @@
             function startTest() {
                 testStarted = true;
                 testFinished = false;
-                // Reset state
+                // Reset jawaban
                 listeningAnswers.fill(null);
                 readingAnswers.fill(null);
                 listeningCurrent = 0;
@@ -586,47 +641,8 @@
                 const data = getCurrentData();
                 const q = data.questions[data.currentIdx];
                 if (!q) {
-                    // Jika tidak ada soal (misal sudah habis di bagian ini, tapi tab masih aktif)
-                    // Tampilkan pesan bahwa bagian sudah selesai
-                    container.innerHTML = `
-                        <div class="header">
-                            <div class="doraemon-icon"></div>
-                            <h1>HSK 2 • Doraemon</h1>
-                            <div style="width:50px;"></div>
-                        </div>
-                        <div class="username-display">👤 ${userName}</div>
-                        <div class="timer-panel">
-                            <span class="timer-item">⏳ Sisa: <span id="perSoalTimerDisplay">${formatTime(perSoalTimeLeft)}</span></span>
-                            <span class="timer-item">⌛ Total: <span id="globalTimerDisplay">${formatTime(globalTimeLeft)}</span></span>
-                        </div>
-                        <div class="tab-bar">
-                            <div class="tab ${activeTab === 'listening' ? 'active' : ''} ${listeningCurrent >= listeningQuestions.length ? 'completed' : ''}" id="tabListening">👂 Listening ${listeningCurrent}/${listeningQuestions.length}</div>
-                            <div class="tab ${activeTab === 'reading' ? 'active' : ''} ${readingCurrent >= readingQuestions.length ? 'completed' : ''}" id="tabReading">📖 Reading ${readingCurrent}/${readingQuestions.length}</div>
-                        </div>
-                        <div class="question-box" style="text-align:center;">
-                            <h2 style="color:#e03a3a;">Bagian ${activeTab === 'listening' ? 'Listening' : 'Reading'} telah selesai!</h2>
-                            <p style="font-size:1.5rem;">Silakan pindah ke tab lain atau jika semua sudah selesai, klik laporan.</p>
-                            <button class="btn-submit" id="btnLaporan">📊 Lihat Laporan</button>
-                        </div>
-                    `;
-                    document.getElementById('tabListening').addEventListener('click', () => {
-                        if (activeTab !== 'listening') {
-                            activeTab = 'listening';
-                            perSoalTimeLeft = 60;
-                            renderSoal();
-                        }
-                    });
-                    document.getElementById('tabReading').addEventListener('click', () => {
-                        if (activeTab !== 'reading') {
-                            activeTab = 'reading';
-                            perSoalTimeLeft = 60;
-                            renderSoal();
-                        }
-                    });
-                    document.getElementById('btnLaporan').addEventListener('click', () => {
-                        clearAllIntervals();
-                        tampilkanLaporan();
-                    });
+                    // Jika tidak ada soal (misal bagian kosong), langsung preview?
+                    tampilkanPreview();
                     return;
                 }
 
@@ -660,6 +676,11 @@
                 const listeningCompleted = listeningCurrent >= listeningQuestions.length ? 'completed' : '';
                 const readingCompleted = readingCurrent >= readingQuestions.length ? 'completed' : '';
 
+                // Cek apakah semua soal sudah dijawab (untuk tampilkan tombol preview)
+                const allListeningAnswered = listeningAnswers.every(ans => ans !== null);
+                const allReadingAnswered = readingAnswers.every(ans => ans !== null);
+                const showPreviewButton = allListeningAnswered && allReadingAnswered;
+
                 container.innerHTML = `
                     <div class="header">
                         <div class="doraemon-icon"></div>
@@ -672,8 +693,8 @@
                         <span class="timer-item">⌛ Total: <span id="globalTimerDisplay">${formatTime(globalTimeLeft)}</span></span>
                     </div>
                     <div class="tab-bar">
-                        <div class="tab ${activeTab === 'listening' ? 'active' : ''} ${listeningCompleted}" id="tabListening">👂 Listening ${listeningCurrent}/${listeningQuestions.length}</div>
-                        <div class="tab ${activeTab === 'reading' ? 'active' : ''} ${readingCompleted}" id="tabReading">📖 Reading ${readingCurrent}/${readingQuestions.length}</div>
+                        <div class="tab ${activeTab === 'listening' ? 'active' : ''} ${listeningCompleted}" id="tabListening">👂 Listening ${listeningCurrent+1}/${listeningQuestions.length}</div>
+                        <div class="tab ${activeTab === 'reading' ? 'active' : ''} ${readingCompleted}" id="tabReading">📖 Reading ${readingCurrent+1}/${readingQuestions.length}</div>
                     </div>
                     <div class="progress-info">Soal ke-${data.currentIdx+1} dari ${data.questions.length}</div>
                     <div class="question-box">
@@ -681,64 +702,75 @@
                         <div class="options" id="optionsContainer">
                             ${optionsHtml}
                         </div>
-                        <button class="btn-submit" id="submitBtn">✅ Jawab & Lanjut</button>
+                        <div class="nav-buttons">
+                            <button class="nav-btn" id="backBtn" ${data.currentIdx === 0 ? 'disabled' : ''}>◀ Back</button>
+                            <button class="nav-btn" id="nextBtn">Next ▶</button>
+                        </div>
                     </div>
+                    ${showPreviewButton ? '<button class="btn-preview" id="previewBtn">📋 Lihat Preview & Hasil</button>' : ''}
                     <div class="footer">🔔 Jangan nyontek, nanti kena rahasia Doraemon!</div>
                 `;
 
-                // Event listener radio
+                // Event listener radio untuk menyimpan jawaban
                 const radios = document.querySelectorAll('input[name="soal"]');
                 radios.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        const dataNow = getCurrentData();
-                        dataNow.setAnswer(dataNow.currentIdx, e.target.value);
+                        saveCurrentAnswer(e.target.value);
                     });
                 });
 
-                document.getElementById('submitBtn').addEventListener('click', () => {
-                    const success = submitJawaban();
-                    if (success) {
-                        document.getElementById('submitBtn').disabled = true;
-                        setTimeout(() => {
-                            // sudah di-handle di submitJawaban
-                        }, 200);
-                    }
-                });
+                document.getElementById('backBtn').addEventListener('click', goToPrev);
+                document.getElementById('nextBtn').addEventListener('click', goToNext);
 
                 // Tab switching
                 document.getElementById('tabListening').addEventListener('click', () => {
-                    if (activeTab !== 'listening') {
+                    if (activeTab !== 'listening' && listeningQuestions.length > 0) {
                         activeTab = 'listening';
                         perSoalTimeLeft = 60;
                         renderSoal();
                     }
                 });
                 document.getElementById('tabReading').addEventListener('click', () => {
-                    if (activeTab !== 'reading') {
+                    if (activeTab !== 'reading' && readingQuestions.length > 0) {
                         activeTab = 'reading';
                         perSoalTimeLeft = 60;
                         renderSoal();
                     }
                 });
+
+                if (showPreviewButton) {
+                    document.getElementById('previewBtn').addEventListener('click', () => {
+                        clearAllIntervals();
+                        tampilkanPreview();
+                    });
+                }
             }
 
-            function tampilkanLaporan() {
+            function tampilkanPreview() {
                 testFinished = true;
                 clearAllIntervals();
 
-                // Hitung benar listening
-                let listeningBenar = 0;
-                listeningQuestions.forEach((q, idx) => {
-                    if (listeningAnswers[idx] === q.answer) listeningBenar++;
-                });
-                let readingBenar = 0;
-                readingQuestions.forEach((q, idx) => {
-                    if (readingAnswers[idx] === q.answer) readingBenar++;
+                // Gabungkan semua soal dengan jawaban
+                const allQuestions = [
+                    ...listeningQuestions.map((q, idx) => ({ ...q, userAnswer: listeningAnswers[idx], part: 'Listening' })),
+                    ...readingQuestions.map((q, idx) => ({ ...q, userAnswer: readingAnswers[idx], part: 'Reading' }))
+                ];
+
+                let previewHtml = '';
+                allQuestions.forEach((q, idx) => {
+                    const isCorrect = q.userAnswer === q.answer;
+                    const statusClass = isCorrect ? 'correct' : 'wrong';
+                    const jawabanUser = q.userAnswer ? q.userAnswer : '(tidak dijawab)';
+                    previewHtml += `
+                        <div class="preview-item ${statusClass}">
+                            <div class="preview-question">${q.part} ${q.no}: ${q.question.substring(0, 80)}...</div>
+                            <div class="preview-answer">Jawaban Anda: ${jawabanUser} | Kunci: ${q.answer}</div>
+                        </div>
+                    `;
                 });
 
-                const totalBenar = listeningBenar + readingBenar;
-                const totalSoal = listeningQuestions.length + readingQuestions.length;
-                const persen = (totalBenar / totalSoal * 100).toFixed(1);
+                const totalBenar = allQuestions.filter(q => q.userAnswer === q.answer).length;
+                const persen = (totalBenar / allQuestions.length * 100).toFixed(1);
                 const lulus = persen >= 90 ? '✅ LULUS' : '❌ TIDAK LULUS';
 
                 container.innerHTML = `
@@ -748,15 +780,18 @@
                         <div style="width:50px;"></div>
                     </div>
                     <div class="laporan">
-                        <h2>🎉 LAPORAN AKHIR</h2>
+                        <h2>🎉 PREVIEW & HASIL</h2>
                         <div style="font-size:2rem; margin:10px;">👤 ${userName}</div>
                         <div class="skor">${persen}%</div>
                         <div style="font-size:2rem; margin:10px;">${lulus}</div>
                         <div class="detail">
-                            <div>👂 Listening<br>${listeningBenar}/${listeningQuestions.length}</div>
-                            <div>📖 Reading<br>${readingBenar}/${readingQuestions.length}</div>
+                            <div>👂 Listening<br>${listeningAnswers.filter((ans, i) => ans === listeningQuestions[i].answer).length}/${listeningQuestions.length}</div>
+                            <div>📖 Reading<br>${readingAnswers.filter((ans, i) => ans === readingQuestions[i].answer).length}/${readingQuestions.length}</div>
                         </div>
-                        <button class="btn-ulang" id="ulangBtn">🔄 Coba Lagi</button>
+                        <div class="preview-grid">
+                            ${previewHtml}
+                        </div>
+                        <button class="btn-ulang" id="ulangBtn" style="margin-top:20px;">🔄 Coba Lagi</button>
                     </div>
                 `;
                 document.getElementById('ulangBtn').addEventListener('click', () => {
