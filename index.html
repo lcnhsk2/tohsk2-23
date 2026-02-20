@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSK Level 2 • Ujian Doraemon (Username & Timer)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        body {
+            font-family: 'Segoe UI', 'Comic Sans MS', 'Chalkboard', sans-serif;
+            background: linear-gradient(145deg, #6ec8f0 0%, #3b9bd6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            margin: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .doraemon-bg {
+            position: fixed;
+            bottom: -20px;
+            right: -20px;
+            width: 280px;
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .kantong-ajaib {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 80px;
+            opacity: 0.4;
+            z-index: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border-radius: 50px 50px 30px 30px;
+            box-shadow: 0 20px 40px rgba(0, 50, 80, 0.5), 0 0 0 4px #f5e56b, 0 0 0 8px #e03a3a;
+            padding: 30px 25px;
+            position: relative;
+            z-index: 10;
+            border: 3px solid white;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: #fef9d7;
+            padding: 15px 25px;
+            border-radius: 60px 60px 30px 30px;
+            border: 3px solid #e03a3a;
+            box-shadow: inset 0 -3px 0 #b33f3f;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            color: #2a6f9c;
+            text-shadow: 2px 2px 0 #f5e56b;
+            letter-spacing: 2px;
+        }
+        .doraemon-icon {
+            width: 70px;
+            height: 70px;
+            background: #1e90ff;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 5px 0 #0b4d7a;
+            position: relative;
+        }
+        .doraemon-icon::before {
+            content: "🐱";
+            font-size: 45px;
+            position: absolute;
+            top: 5px;
+            left: 8px;
+        }
+        .timer-panel {
+            display: flex;
+            justify-content: space-between;
+            background: #2f5f8a;
+            padding: 12px 25px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            border: 3px solid #f5e56b;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            text-shadow: 2px 2px 0 #1d3e5e;
+        }
+        .timer-item {
+            background: #0e3d5e;
+            padding: 5px 20px;
+            border-radius: 40px;
+            box-shadow: inset 0 -3px 0 #0a2a3a;
+        }
+        .question-box {
+            background: #fffbf0;
+            border-radius: 40px;
+            padding: 30px;
+            border: 4px solid #f5e56b;
+            box-shadow: 0 8px 0 #d4a017, inset 0 2px 10px #ffeeaa;
+            margin-bottom: 30px;
+        }
+        .question-text {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #1e3b5c;
+            font-weight: 600;
+            background: #e6f3ff;
+            padding: 15px 20px;
+            border-radius: 30px;
+            border: 2px dashed #3b9bd6;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .option-item {
+            background: white;
+            border-radius: 50px;
+            padding: 12px 20px;
+            border: 3px solid #3b9bd6;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .option-item:hover {
+            background: #c2e4ff;
+            border-color: #e03a3a;
+            transform: scale(1.01);
+        }
+        .option-item input[type="radio"] {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #1e90ff;
+            border-radius: 50%;
+            outline: none;
+            transition: 0.1s;
+            cursor: pointer;
+            background: white;
+        }
+        .option-item input[type="radio"]:checked {
+            background: #e03a3a;
+            border-color: #e03a3a;
+            box-shadow: 0 0 0 3px #f5e56b;
+        }
+        .option-item label {
+            flex: 1;
+            cursor: pointer;
+            color: #1d3e5e;
+        }
+        .btn-submit {
+            background: #f5a623;
+            border: none;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 20px 30px;
+            border-radius: 60px;
+            color: white;
+            text-shadow: 2px 2px 0 #b35f00;
+            border-bottom: 8px solid #b35f00;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.07s;
+            margin-top: 15px;
+            font-family: inherit;
+        }
+        .btn-submit:active {
+            border-bottom-width: 2px;
+            transform: translateY(6px);
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .modal-start {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 80, 130, 0.95);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .modal-card {
+            background: #fef9d7;
+            max-width: 500px;
+            width: 90%;
+            padding: 40px;
+            border-radius: 80px 80px 40px 40px;
+            border: 8px solid #f5e56b;
+            text-align: center;
+            box-shadow: 0 20px 0 #b35f00;
+        }
+        .modal-card h2 {
+            font-size: 3rem;
+            color: #e03a3a;
+            margin-bottom: 10px;
+        }
+        .modal-card p {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            color: #1e3b5c;
+        }
+        .modal-card input {
+            width: 80%;
+            padding: 15px;
+            border-radius: 50px;
+            border: 3px solid #1e90ff;
+            font-size: 1.5rem;
+            text-align: center;
+            margin: 20px 0;
+            outline: none;
+            background: white;
+        }
+        .btn-start {
+            background: #1e90ff;
+            border: none;
+            font-size: 2.5rem;
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: white;
+            border-bottom: 8px solid #0b4d7a;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .btn-start:active {
+            border-bottom-width: 2px;
+            transform: translateY(6px);
+        }
+        .laporan {
+            background: #e6f7ff;
+            border-radius: 40px;
+            padding: 25px;
+            border: 4px solid #f5e56b;
+            text-align: center;
+        }
+        .laporan h2 {
+            font-size: 2.5rem;
+            color: #e03a3a;
+        }
+        .laporan .skor {
+            font-size: 3rem;
+            background: #fff;
+            display: inline-block;
+            padding: 10px 40px;
+            border-radius: 60px;
+            margin: 20px;
+            border: 5px solid #1e90ff;
+        }
+        .detail {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.5rem;
+            margin: 30px 0;
+        }
+        .btn-ulang {
+            background: #f5a623;
+            border: none;
+            font-size: 2rem;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            border-bottom: 6px solid #b35f00;
+            cursor: pointer;
+        }
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            color: #fff;
+            text-shadow: 2px 2px 0 #1e3b5c;
+        }
+        .username-display {
+            font-size: 1.5rem;
+            background: #ffefc0;
+            padding: 10px;
+            border-radius: 40px;
+            margin-bottom: 10px;
+            border: 2px solid #f5a623;
+        }
+    </style>
+</head>
+<body>
+    <div class="kantong-ajaib">🔔🐱</div>
+    <div class="doraemon-bg">🐱🔔🐱🔔🐱</div>
+
+    <div class="container" id="mainContainer"></div>
+
+    <script>
+        (function() {
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('copy', e => e.preventDefault());
+            document.addEventListener('cut', e => e.preventDefault());
+            document.addEventListener('paste', e => e.preventDefault());
+
+            // Data soal (35 soal)
+            const questions = [
+                { no: 21, type: 'mc3', part: 'listening', question: '你要去中国？哪天的飞机？男：就是今天中午。问：男的什么时候去中国？', options: ['A 今天中午', 'B 明天中午', 'C 后天中午'], answer: 'A' },
+                { no: 22, type: 'mc3', part: 'listening', question: '男：再有十分钟船就要开了，你朋友怎么还没到？女：我也不知道，我给他打个电话问问。问：女的要给谁打电话？', options: ['A 丈夫', 'B 医生', 'C 朋友'], answer: 'C' },
+                { no: 23, type: 'mc3', part: 'listening', question: '女：你喜欢喝咖啡吗？男：不太喜欢，我爱喝茶。问：男的爱喝什么？', options: ['A 茶', 'B 牛奶', 'C 咖啡'], answer: 'A' },
+                { no: 24, type: 'mc3', part: 'listening', question: '男：白老师，您来这个学校多少年了？女：我二十四岁就来这个学校了，到现在有三十多年了。问：女的在哪儿工作？', options: ['A 医院', 'B 学校', 'C 商店'], answer: 'B' },
+                { no: 25, type: 'mc3', part: 'listening', question: '女：你找到你的手表了？男：没有，这是我昨天新买的。问：那块儿新表是什么时候买的？', options: ['A 昨天', 'B 上个月', 'C 去年'], answer: 'A' },
+                { no: 26, type: 'mc3', part: 'listening', question: '男：是真的吗？那太有意思了。女：是真的，我也觉得很好笑。问：他们觉得怎么样？', options: ['A 很好吃', 'B 很好笑', 'C 很好听'], answer: 'B' },
+                { no: 27, type: 'mc3', part: 'listening', question: '女：你怎么回来了？没去踢足球？男：天气太热了，所以大家都回去了。问：男的为什么回来了？', options: ['A 累了', 'B 天阴了', 'C 天气太热'], answer: 'C' },
+                { no: 28, type: 'mc3', part: 'listening', question: '男：你到哪儿了？女：我在出租车上，五分钟后就到。问：女的现在在哪儿？', options: ['A 房间里', 'B 飞机上', 'C 出租车上'], answer: 'C' },
+                { no: 29, type: 'mc3', part: 'listening', question: '女：爸爸，这个自行车怎么样？男：很漂亮，你喜欢吗？问：他们在看什么？', options: ['A 椅子', 'B 桌子', 'C 自行车'], answer: 'C' },
+                { no: 30, type: 'mc3', part: 'listening', question: '男：吃药了吗？女：还没呢，吃完饭一个小时后吃。问：男的让女的吃什么？', options: ['A 药', 'B 羊肉', 'C 米饭'], answer: 'A' },
+                { no: 31, type: 'mc3', part: 'listening', question: '男：天晴了，我们出去走走吧。女：我想在家看电视。男：回来再看？女：好吧，那你等我一下，我去穿件衣服。问：外面天气怎么样？', options: ['A 下雨了', 'B 下雪了', 'C 天晴了'], answer: 'C' },
+                { no: 32, type: 'mc3', part: 'listening', question: '女：我们要了几个菜了？男：我看看，现在是七个。女：好，再要一个鱼就可以了，就这些，谢谢。男：不客气。问：他们最可能在哪儿？', options: ['A 水果店', 'B 饭店里', 'C 妹妹家'], answer: 'B' },
+                { no: 33, type: 'mc3', part: 'listening', question: '男：你看那块儿手表怎么样？我弟弟会不会喜欢？女：很漂亮，但是太贵了。男：两百块，不贵。女：你再看看，那是两千，你少说了一个零。问：男的想给谁买手表？', options: ['A 弟弟', 'B 服务员', 'C 汉语老师'], answer: 'A' },
+                { no: 34, type: 'mc3', part: 'listening', question: '女：八点了，怎么还不起床？男：让我再睡二十分钟。女：二十分钟？你不去上班了？男：今天是星期六。问：女的想让男的做什么？', options: ['A 游泳', 'B 起床', 'C 打篮球'], answer: 'B' },
+                { no: 35, type: 'mc3', part: 'listening', question: '男：明天你去吗？女：不去了，我明天上午有课。男：明天星期日，怎么还有课？女：是去学开车。问：女的为什么明天不能去？', options: ['A 要卖报纸', 'B 要去上课', 'C 要去唱歌'], answer: 'B' },
+                { no: 41, type: 'mc6', part: 'reading', question: '对不起，我现在很忙，没（ ）。', options: ['A 时间', 'B 机场', 'C 开始', 'D 生病', 'E 贵', 'F 从'], answer: 'A' },
+                { no: 42, type: 'mc6', part: 'reading', question: '电影就要（ ）了，你们快点儿进去吧。', options: ['A 时间', 'B 机场', 'C 开始', 'D 生病', 'E 贵', 'F 从'], answer: 'C' },
+                { no: 43, type: 'mc6', part: 'reading', question: '喂，我已经（ ）教室出来了，你在哪儿呢？', options: ['A 时间', 'B 机场', 'C 开始', 'D 生病', 'E 贵', 'F 从'], answer: 'F' },
+                { no: 44, type: 'mc6', part: 'reading', question: '妻子（ ）了，他一个晚上都没睡觉。', options: ['A 时间', 'B 机场', 'C 开始', 'D 生病', 'E 贵', 'F 从'], answer: 'D' },
+                { no: 45, type: 'mc6', part: 'reading', question: '女：请问，这儿离（ ）还远吗？男：不远了，再有10分钟就到了。', options: ['A 时间', 'B 机场', 'C 开始', 'D 生病', 'E 贵', 'F 从'], answer: 'B' },
+                { no: 46, type: 'tf', part: 'reading', question: '有些人喜欢早上起床后喝一杯水，因为早上喝水对身体非常好。\n★ 早上喝水对身体不好。', options: ['√ 对', '× 错'], answer: '×' },
+                { no: 47, type: 'tf', part: 'reading', question: '我这次住的旅馆在火车站旁边，也不贵，我觉得很不错，下次来我还住那儿。\n★ 那家旅馆离火车站很近。', options: ['√ 对', '× 错'], answer: '√' },
+                { no: 48, type: 'tf', part: 'reading', question: '儿子，你每天运动的时间太少了，明天早上和我一起去跑步吧。\n★ 他想让儿子多运动。', options: ['√ 对', '× 错'], answer: '√' },
+                { no: 49, type: 'tf', part: 'reading', question: '等考完试，我们准备去北京玩儿两天，你去不去？\n★ 他正在北京旅游。', options: ['√ 对', '× 错'], answer: '×' },
+                { no: 50, type: 'tf', part: 'reading', question: '这个电影很长，有两个多小时，一张票120元，学生票70元。\n★ 学生票便宜。', options: ['√ 对', '× 错'], answer: '√' },
+                { no: 51, type: 'mc6', part: 'reading', question: '请你来回答这个问题好不好？', options: ['A 我觉得写得非常好，我先生也很喜欢。', 'B 对不起，老师，我没听懂。', 'C 早点儿休息，明天上午9点见。', 'D 哥，你的电脑太慢了。', 'E 他在哪儿呢？你看见他了吗？', 'F 谢谢你告诉我这件事情。'], answer: 'B' },
+                { no: 52, type: 'mc6', part: 'reading', question: '这已经比前几天快多了。', options: ['A 我觉得写得非常好，我先生也很喜欢。', 'B 对不起，老师，我没听懂。', 'C 早点儿休息，明天上午9点见。', 'D 哥，你的电脑太慢了。', 'E 他在哪儿呢？你看见他了吗？', 'F 谢谢你告诉我这件事情。'], answer: 'D' },
+                { no: 53, type: 'mc6', part: 'reading', question: '今天玩儿了一天，累了吧？', options: ['A 我觉得写得非常好，我先生也很喜欢。', 'B 对不起，老师，我没听懂。', 'C 早点儿休息，明天上午9点见。', 'D 哥，你的电脑太慢了。', 'E 他在哪儿呢？你看见他了吗？', 'F 谢谢你告诉我这件事情。'], answer: 'C' },
+                { no: 54, type: 'mc6', part: 'reading', question: '不客气，希望能对你有帮助。', options: ['A 我觉得写得非常好，我先生也很喜欢。', 'B 对不起，老师，我没听懂。', 'C 早点儿休息，明天上午9点见。', 'D 哥，你的电脑太慢了。', 'E 他在哪儿呢？你看见他了吗？', 'F 谢谢你告诉我这件事情。'], answer: 'F' },
+                { no: 55, type: 'mc6', part: 'reading', question: '你送我的那本书我已经读完了。', options: ['A 我觉得写得非常好，我先生也很喜欢。', 'B 对不起，老师，我没听懂。', 'C 早点儿休息，明天上午9点见。', 'D 哥，你的电脑太慢了。', 'E 他在哪儿呢？你看见他了吗？', 'F 谢谢你告诉我这件事情。'], answer: 'A' },
+                { no: 56, type: 'mc5', part: 'reading', question: '左边是“女”字，右边是“生”字。', options: ['A 你知道“姓”怎么写吗？', 'B 我在路上买了点儿苹果。', 'C 你怎么会认识那个孩子？', 'D 颜色不错，比黑的好看。', 'E 你好，请问李小姐住哪个房间？'], answer: 'A' },
+                { no: 57, type: 'mc5', part: 'reading', question: '我想买手机，你看这个红的怎么样？', options: ['A 你知道“姓”怎么写吗？', 'B 我在路上买了点儿苹果。', 'C 你怎么会认识那个孩子？', 'D 颜色不错，比黑的好看。', 'E 你好，请问李小姐住哪个房间？'], answer: 'D' },
+                { no: 58, type: 'mc5', part: 'reading', question: '给我吧，我去洗洗。', options: ['A 你知道“姓”怎么写吗？', 'B 我在路上买了点儿苹果。', 'C 你怎么会认识那个孩子？', 'D 颜色不错，比黑的好看。', 'E 你好，请问李小姐住哪个房间？'], answer: 'B' },
+                { no: 59, type: 'mc5', part: 'reading', question: '他是女儿的同学，来过我们家。', options: ['A 你知道“姓”怎么写吗？', 'B 我在路上买了点儿苹果。', 'C 你怎么会认识那个孩子？', 'D 颜色不错，比黑的好看。', 'E 你好，请问李小姐住哪个房间？'], answer: 'C' },
+                { no: 60, type: 'mc5', part: 'reading', question: '507，左边第一个。', options: ['A 你知道“姓”怎么写吗？', 'B 我在路上买了点儿苹果。', 'C 你怎么会认识那个孩子？', 'D 颜色不错，比黑的好看。', 'E 你好，请问李小姐住哪个房间？'], answer: 'E' }
+            ];
+
+            let currentIndex = 0;
+            let userAnswers = new Array(questions.length).fill(null);
+            let testStarted = false;
+            let testFinished = false;
+            let userName = "Peserta"; // default
+
+            // Timer global: 47 menit = 2820 detik
+            const TOTAL_GLOBAL_SECONDS = 47 * 60;
+            let globalTimeLeft = TOTAL_GLOBAL_SECONDS;
+            let perSoalTimeLeft = 60;
+
+            let globalTimerInterval = null;
+            let perSoalTimerInterval = null;
+
+            const container = document.getElementById('mainContainer');
+
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            function clearAllIntervals() {
+                if (globalTimerInterval) clearInterval(globalTimerInterval);
+                if (perSoalTimerInterval) clearInterval(perSoalTimerInterval);
+                globalTimerInterval = null;
+                perSoalTimerInterval = null;
+            }
+
+            function lanjutKeSoalBerikutnya(jawabanTersimpan = null) {
+                if (jawabanTersimpan !== null) {
+                    userAnswers[currentIndex] = jawabanTersimpan;
+                }
+                if (currentIndex + 1 < questions.length) {
+                    currentIndex++;
+                    perSoalTimeLeft = 60;
+                    renderSoal();
+                } else {
+                    clearAllIntervals();
+                    tampilkanLaporan();
+                }
+            }
+
+            function perSoalWaktuHabis() {
+                if (testFinished) return;
+                lanjutKeSoalBerikutnya(null);
+            }
+
+            function globalWaktuHabis() {
+                if (testFinished) return;
+                clearAllIntervals();
+                testFinished = true;
+                tampilkanLaporan();
+            }
+
+            function startTimers() {
+                clearAllIntervals();
+
+                globalTimerInterval = setInterval(() => {
+                    if (testFinished) return;
+                    globalTimeLeft--;
+                    if (globalTimeLeft <= 0) {
+                        globalTimeLeft = 0;
+                        globalWaktuHabis();
+                    }
+                    const globalEl = document.getElementById('globalTimerDisplay');
+                    const perEl = document.getElementById('perSoalTimerDisplay');
+                    if (globalEl) globalEl.innerText = formatTime(globalTimeLeft);
+                    if (perEl) perEl.innerText = formatTime(perSoalTimeLeft);
+                }, 1000);
+
+                perSoalTimerInterval = setInterval(() => {
+                    if (testFinished) return;
+                    perSoalTimeLeft--;
+                    if (perSoalTimeLeft <= 0) {
+                        perSoalTimeLeft = 0;
+                        clearInterval(perSoalTimerInterval);
+                        perSoalTimerInterval = null;
+                        perSoalWaktuHabis();
+                    }
+                    const perEl = document.getElementById('perSoalTimerDisplay');
+                    if (perEl) perEl.innerText = formatTime(perSoalTimeLeft);
+                }, 1000);
+            }
+
+            function renderModal() {
+                container.innerHTML = `
+                    <div class="modal-start" id="modalStart">
+                        <div class="modal-card">
+                            <h2>🐱 ドラえもん</h2>
+                            <p>HSK 二级 模拟考试</p>
+                            <p>📋 35 soal • Listening & Reading</p>
+                            <p>⏱ Total 47 menit | 60 detik per soal</p>
+                            <input type="text" id="usernameInput" placeholder="Masukkan nama kamu" value="${userName}">
+                            <button class="btn-start" id="btnStart">Mulai</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('btnStart').addEventListener('click', () => {
+                    const input = document.getElementById('usernameInput');
+                    if (input.value.trim() !== '') {
+                        userName = input.value.trim();
+                    } else {
+                        userName = 'Peserta';
+                    }
+                    document.getElementById('modalStart').style.display = 'none';
+                    startTest();
+                });
+            }
+
+            function startTest() {
+                testStarted = true;
+                testFinished = false;
+                currentIndex = 0;
+                userAnswers.fill(null);
+                globalTimeLeft = TOTAL_GLOBAL_SECONDS;
+                perSoalTimeLeft = 60;
+                renderSoal();
+                startTimers();
+            }
+
+            function renderSoal() {
+                if (currentIndex >= questions.length) {
+                    tampilkanLaporan();
+                    return;
+                }
+                const q = questions[currentIndex];
+                let optionsHtml = '';
+                if (q.type === 'mc3' || q.type === 'mc5' || q.type === 'mc6') {
+                    q.options.forEach((opt, idx) => {
+                        const letter = opt.split(' ')[0];
+                        optionsHtml += `
+                            <div class="option-item" onclick="document.getElementById('opt_${currentIndex}_${letter}').click();">
+                                <input type="radio" name="soal" id="opt_${currentIndex}_${letter}" value="${letter}" ${userAnswers[currentIndex] === letter ? 'checked' : ''}>
+                                <label for="opt_${currentIndex}_${letter}">${opt}</label>
+                            </div>
+                        `;
+                    });
+                } else if (q.type === 'tf') {
+                    optionsHtml += `
+                        <div class="option-item" onclick="document.getElementById('opt_${currentIndex}_√').click();">
+                            <input type="radio" name="soal" id="opt_${currentIndex}_√" value="√" ${userAnswers[currentIndex] === '√' ? 'checked' : ''}>
+                            <label for="opt_${currentIndex}_√">${q.options[0]}</label>
+                        </div>
+                        <div class="option-item" onclick="document.getElementById('opt_${currentIndex}_×').click();">
+                            <input type="radio" name="soal" id="opt_${currentIndex}_×" value="×" ${userAnswers[currentIndex] === '×' ? 'checked' : ''}>
+                            <label for="opt_${currentIndex}_×">${q.options[1]}</label>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                    <div class="header">
+                        <div class="doraemon-icon"></div>
+                        <h1>HSK 2 • Doraemon</h1>
+                        <div style="width:50px;"></div>
+                    </div>
+                    <div class="username-display">👤 ${userName}</div>
+                    <div class="timer-panel">
+                        <span class="timer-item">⏳ Sisa: <span id="perSoalTimerDisplay">${formatTime(perSoalTimeLeft)}</span></span>
+                        <span class="timer-item">⌛ Total: <span id="globalTimerDisplay">${formatTime(globalTimeLeft)}</span></span>
+                    </div>
+                    <div class="question-box">
+                        <div class="question-text">${q.question.replace(/\n/g, '<br>')}</div>
+                        <div class="options" id="optionsContainer">
+                            ${optionsHtml}
+                        </div>
+                        <button class="btn-submit" id="submitBtn">✅ Jawab & Lanjut</button>
+                    </div>
+                    <div class="footer">🔔 Jangan nyontek, nanti kena rahasia Doraemon!</div>
+                `;
+
+                const radios = document.querySelectorAll('input[name="soal"]');
+                radios.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        userAnswers[currentIndex] = e.target.value;
+                    });
+                });
+
+                document.getElementById('submitBtn').addEventListener('click', () => {
+                    const selected = document.querySelector('input[name="soal"]:checked');
+                    if (!selected) {
+                        alert('Pilih jawaban dulu ya!');
+                        return;
+                    }
+                    userAnswers[currentIndex] = selected.value;
+                    document.getElementById('submitBtn').disabled = true;
+                    setTimeout(() => {
+                        lanjutKeSoalBerikutnya();
+                    }, 500);
+                });
+            }
+
+            function tampilkanLaporan() {
+                testFinished = true;
+                clearAllIntervals();
+
+                let listeningBenar = 0, readingBenar = 0;
+                questions.forEach((q, idx) => {
+                    const jawabanUser = userAnswers[idx];
+                    const kunci = q.answer;
+                    if (jawabanUser === kunci) {
+                        if (q.part === 'listening') listeningBenar++;
+                        else readingBenar++;
+                    }
+                });
+                const totalBenar = listeningBenar + readingBenar;
+                const totalSoal = questions.length;
+                const persen = (totalBenar / totalSoal * 100).toFixed(1);
+                const lulus = persen >= 90 ? '✅ LULUS' : '❌ TIDAK LULUS';
+
+                container.innerHTML = `
+                    <div class="header">
+                        <div class="doraemon-icon"></div>
+                        <h1>HSK 2 • Doraemon</h1>
+                        <div style="width:50px;"></div>
+                    </div>
+                    <div class="laporan">
+                        <h2>🎉 LAPORAN AKHIR</h2>
+                        <div style="font-size:2rem; margin:10px;">👤 ${userName}</div>
+                        <div class="skor">${persen}%</div>
+                        <div style="font-size:2rem; margin:10px;">${lulus}</div>
+                        <div class="detail">
+                            <div>👂 Listening<br>${listeningBenar}/15</div>
+                            <div>📖 Reading<br>${readingBenar}/20</div>
+                        </div>
+                        <button class="btn-ulang" id="ulangBtn">🔄 Coba Lagi</button>
+                    </div>
+                `;
+                document.getElementById('ulangBtn').addEventListener('click', () => {
+                    location.reload();
+                });
+            }
+
+            renderModal();
+        })();
+    </script>
+</body>
+</html>
