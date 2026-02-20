@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HSK Level 2 • Ujian Doraemon (Username & Timer)</title>
+    <title>HSK Level 2 • Doraemon (Tab Listening & Reading)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -85,6 +85,15 @@
             top: 5px;
             left: 8px;
         }
+        .username-display {
+            font-size: 1.5rem;
+            background: #ffefc0;
+            padding: 10px;
+            border-radius: 40px;
+            margin-bottom: 10px;
+            border: 2px solid #f5a623;
+            text-align: center;
+        }
         .timer-panel {
             display: flex;
             justify-content: space-between;
@@ -103,6 +112,36 @@
             padding: 5px 20px;
             border-radius: 40px;
             box-shadow: inset 0 -3px 0 #0a2a3a;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            border-radius: 60px 60px 20px 20px;
+            background: #b0d9f0;
+            border: 3px solid #1e90ff;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #1d3e5e;
+            box-shadow: 0 5px 0 #0b4d7a;
+        }
+        .tab.active {
+            background: #f5e56b;
+            border-color: #e03a3a;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #b35f00;
+        }
+        .tab.completed {
+            background: #a5d6a5;
+            border-color: #2e7d32;
         }
         .question-box {
             background: #fffbf0;
@@ -289,13 +328,13 @@
             color: #fff;
             text-shadow: 2px 2px 0 #1e3b5c;
         }
-        .username-display {
-            font-size: 1.5rem;
-            background: #ffefc0;
-            padding: 10px;
-            border-radius: 40px;
-            margin-bottom: 10px;
-            border: 2px solid #f5a623;
+        .progress-info {
+            text-align: center;
+            font-size: 1.2rem;
+            background: #ffe0a3;
+            border-radius: 30px;
+            padding: 8px;
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -312,8 +351,8 @@
             document.addEventListener('cut', e => e.preventDefault());
             document.addEventListener('paste', e => e.preventDefault());
 
-            // Data soal (35 soal)
-            const questions = [
+            // Data mentah (sama seperti sebelumnya, 35 soal)
+            const rawQuestions = [
                 { no: 21, type: 'mc3', part: 'listening', question: '你要去中国？哪天的飞机？男：就是今天中午。问：男的什么时候去中国？', options: ['A 今天中午', 'B 明天中午', 'C 后天中午'], answer: 'A' },
                 { no: 22, type: 'mc3', part: 'listening', question: '男：再有十分钟船就要开了，你朋友怎么还没到？女：我也不知道，我给他打个电话问问。问：女的要给谁打电话？', options: ['A 丈夫', 'B 医生', 'C 朋友'], answer: 'C' },
                 { no: 23, type: 'mc3', part: 'listening', question: '女：你喜欢喝咖啡吗？男：不太喜欢，我爱喝茶。问：男的爱喝什么？', options: ['A 茶', 'B 牛奶', 'C 咖啡'], answer: 'A' },
@@ -351,11 +390,20 @@
                 { no: 60, type: 'mc5', part: 'reading', question: '507，左边第一个。', options: ['A 你知道“姓”怎么写吗？', 'B 我在路上买了点儿苹果。', 'C 你怎么会认识那个孩子？', 'D 颜色不错，比黑的好看。', 'E 你好，请问李小姐住哪个房间？'], answer: 'E' }
             ];
 
-            let currentIndex = 0;
-            let userAnswers = new Array(questions.length).fill(null);
+            // Pisahkan berdasarkan part
+            const listeningQuestions = rawQuestions.filter(q => q.part === 'listening');
+            const readingQuestions = rawQuestions.filter(q => q.part === 'reading');
+
+            // State per bagian
+            let listeningAnswers = new Array(listeningQuestions.length).fill(null);
+            let readingAnswers = new Array(readingQuestions.length).fill(null);
+            let listeningCurrent = 0;
+            let readingCurrent = 0;
+            let activeTab = 'listening'; // 'listening' atau 'reading'
+
             let testStarted = false;
             let testFinished = false;
-            let userName = "Peserta"; // default
+            let userName = "Peserta";
 
             // Timer global: 47 menit = 2820 detik
             const TOTAL_GLOBAL_SECONDS = 47 * 60;
@@ -380,23 +428,81 @@
                 perSoalTimerInterval = null;
             }
 
-            function lanjutKeSoalBerikutnya(jawabanTersimpan = null) {
-                if (jawabanTersimpan !== null) {
-                    userAnswers[currentIndex] = jawabanTersimpan;
-                }
-                if (currentIndex + 1 < questions.length) {
-                    currentIndex++;
-                    perSoalTimeLeft = 60;
-                    renderSoal();
+            // Fungsi untuk mendapatkan soal dan jawaban saat ini berdasarkan tab
+            function getCurrentData() {
+                if (activeTab === 'listening') {
+                    return {
+                        questions: listeningQuestions,
+                        answers: listeningAnswers,
+                        currentIdx: listeningCurrent,
+                        setAnswer: (idx, val) => { listeningAnswers[idx] = val; }
+                    };
                 } else {
-                    clearAllIntervals();
-                    tampilkanLaporan();
+                    return {
+                        questions: readingQuestions,
+                        answers: readingAnswers,
+                        currentIdx: readingCurrent,
+                        setAnswer: (idx, val) => { readingAnswers[idx] = val; }
+                    };
                 }
             }
 
+            // Fungsi untuk menyimpan jawaban dan lanjut di bagian yang sama
+            function submitJawaban() {
+                const data = getCurrentData();
+                if (data.currentIdx >= data.questions.length) return; // sudah habis
+
+                const selected = document.querySelector('input[name="soal"]:checked');
+                if (!selected) {
+                    alert('Pilih jawaban dulu ya!');
+                    return false;
+                }
+                // Simpan jawaban
+                data.setAnswer(data.currentIdx, selected.value);
+
+                // Increment indeks bagian jika masih ada
+                if (activeTab === 'listening') {
+                    if (listeningCurrent + 1 < listeningQuestions.length) {
+                        listeningCurrent++;
+                    } else {
+                        // sudah habis, bisa nonaktifkan atau biarkan
+                    }
+                } else {
+                    if (readingCurrent + 1 < readingQuestions.length) {
+                        readingCurrent++;
+                    } else {
+                        // habis
+                    }
+                }
+
+                // Reset timer per soal
+                perSoalTimeLeft = 60;
+
+                // Render ulang (dengan tab yang sama)
+                renderSoal();
+                return true;
+            }
+
+            // Fungsi lanjut karena waktu habis (jawaban null)
             function perSoalWaktuHabis() {
                 if (testFinished) return;
-                lanjutKeSoalBerikutnya(null);
+                // Jawaban tidak diisi => null (sudah default)
+                // Increment indeks bagian
+                if (activeTab === 'listening') {
+                    if (listeningCurrent + 1 < listeningQuestions.length) {
+                        listeningCurrent++;
+                    } else {
+                        // habis, mungkin pindah tab? biarkan saja
+                    }
+                } else {
+                    if (readingCurrent + 1 < readingQuestions.length) {
+                        readingCurrent++;
+                    } else {
+                        // habis
+                    }
+                }
+                perSoalTimeLeft = 60;
+                renderSoal();
             }
 
             function globalWaktuHabis() {
@@ -440,9 +546,9 @@
                 container.innerHTML = `
                     <div class="modal-start" id="modalStart">
                         <div class="modal-card">
-                            <h2>🐱 ドラえもん</h2>
-                            <p>HSK 二级 模拟考试</p>
-                            <p>📋 35 soal • Listening & Reading</p>
+                            <h2>🐱 HSK 二级 模拟考试</h2>
+                            <p>by lcnpalembang-08994477998</p>
+                            <p>📋 Listening 15 soal • Reading 20 soal</p>
                             <p>⏱ Total 47 menit | 60 detik per soal</p>
                             <input type="text" id="usernameInput" placeholder="Masukkan nama kamu" value="${userName}">
                             <button class="btn-start" id="btnStart">Mulai</button>
@@ -464,8 +570,12 @@
             function startTest() {
                 testStarted = true;
                 testFinished = false;
-                currentIndex = 0;
-                userAnswers.fill(null);
+                // Reset state
+                listeningAnswers.fill(null);
+                readingAnswers.fill(null);
+                listeningCurrent = 0;
+                readingCurrent = 0;
+                activeTab = 'listening';
                 globalTimeLeft = TOTAL_GLOBAL_SECONDS;
                 perSoalTimeLeft = 60;
                 renderSoal();
@@ -473,34 +583,82 @@
             }
 
             function renderSoal() {
-                if (currentIndex >= questions.length) {
-                    tampilkanLaporan();
+                const data = getCurrentData();
+                const q = data.questions[data.currentIdx];
+                if (!q) {
+                    // Jika tidak ada soal (misal sudah habis di bagian ini, tapi tab masih aktif)
+                    // Tampilkan pesan bahwa bagian sudah selesai
+                    container.innerHTML = `
+                        <div class="header">
+                            <div class="doraemon-icon"></div>
+                            <h1>HSK 2 • Doraemon</h1>
+                            <div style="width:50px;"></div>
+                        </div>
+                        <div class="username-display">👤 ${userName}</div>
+                        <div class="timer-panel">
+                            <span class="timer-item">⏳ Sisa: <span id="perSoalTimerDisplay">${formatTime(perSoalTimeLeft)}</span></span>
+                            <span class="timer-item">⌛ Total: <span id="globalTimerDisplay">${formatTime(globalTimeLeft)}</span></span>
+                        </div>
+                        <div class="tab-bar">
+                            <div class="tab ${activeTab === 'listening' ? 'active' : ''} ${listeningCurrent >= listeningQuestions.length ? 'completed' : ''}" id="tabListening">👂 Listening ${listeningCurrent}/${listeningQuestions.length}</div>
+                            <div class="tab ${activeTab === 'reading' ? 'active' : ''} ${readingCurrent >= readingQuestions.length ? 'completed' : ''}" id="tabReading">📖 Reading ${readingCurrent}/${readingQuestions.length}</div>
+                        </div>
+                        <div class="question-box" style="text-align:center;">
+                            <h2 style="color:#e03a3a;">Bagian ${activeTab === 'listening' ? 'Listening' : 'Reading'} telah selesai!</h2>
+                            <p style="font-size:1.5rem;">Silakan pindah ke tab lain atau jika semua sudah selesai, klik laporan.</p>
+                            <button class="btn-submit" id="btnLaporan">📊 Lihat Laporan</button>
+                        </div>
+                    `;
+                    document.getElementById('tabListening').addEventListener('click', () => {
+                        if (activeTab !== 'listening') {
+                            activeTab = 'listening';
+                            perSoalTimeLeft = 60;
+                            renderSoal();
+                        }
+                    });
+                    document.getElementById('tabReading').addEventListener('click', () => {
+                        if (activeTab !== 'reading') {
+                            activeTab = 'reading';
+                            perSoalTimeLeft = 60;
+                            renderSoal();
+                        }
+                    });
+                    document.getElementById('btnLaporan').addEventListener('click', () => {
+                        clearAllIntervals();
+                        tampilkanLaporan();
+                    });
                     return;
                 }
-                const q = questions[currentIndex];
+
                 let optionsHtml = '';
                 if (q.type === 'mc3' || q.type === 'mc5' || q.type === 'mc6') {
                     q.options.forEach((opt, idx) => {
                         const letter = opt.split(' ')[0];
+                        const checked = (data.answers[data.currentIdx] === letter) ? 'checked' : '';
                         optionsHtml += `
-                            <div class="option-item" onclick="document.getElementById('opt_${currentIndex}_${letter}').click();">
-                                <input type="radio" name="soal" id="opt_${currentIndex}_${letter}" value="${letter}" ${userAnswers[currentIndex] === letter ? 'checked' : ''}>
-                                <label for="opt_${currentIndex}_${letter}">${opt}</label>
+                            <div class="option-item" onclick="document.getElementById('opt_${activeTab}_${data.currentIdx}_${letter}').click();">
+                                <input type="radio" name="soal" id="opt_${activeTab}_${data.currentIdx}_${letter}" value="${letter}" ${checked}>
+                                <label for="opt_${activeTab}_${data.currentIdx}_${letter}">${opt}</label>
                             </div>
                         `;
                     });
                 } else if (q.type === 'tf') {
+                    const checkedTrue = (data.answers[data.currentIdx] === '√') ? 'checked' : '';
+                    const checkedFalse = (data.answers[data.currentIdx] === '×') ? 'checked' : '';
                     optionsHtml += `
-                        <div class="option-item" onclick="document.getElementById('opt_${currentIndex}_√').click();">
-                            <input type="radio" name="soal" id="opt_${currentIndex}_√" value="√" ${userAnswers[currentIndex] === '√' ? 'checked' : ''}>
-                            <label for="opt_${currentIndex}_√">${q.options[0]}</label>
+                        <div class="option-item" onclick="document.getElementById('opt_${activeTab}_${data.currentIdx}_√').click();">
+                            <input type="radio" name="soal" id="opt_${activeTab}_${data.currentIdx}_√" value="√" ${checkedTrue}>
+                            <label for="opt_${activeTab}_${data.currentIdx}_√">${q.options[0]}</label>
                         </div>
-                        <div class="option-item" onclick="document.getElementById('opt_${currentIndex}_×').click();">
-                            <input type="radio" name="soal" id="opt_${currentIndex}_×" value="×" ${userAnswers[currentIndex] === '×' ? 'checked' : ''}>
-                            <label for="opt_${currentIndex}_×">${q.options[1]}</label>
+                        <div class="option-item" onclick="document.getElementById('opt_${activeTab}_${data.currentIdx}_×').click();">
+                            <input type="radio" name="soal" id="opt_${activeTab}_${data.currentIdx}_×" value="×" ${checkedFalse}>
+                            <label for="opt_${activeTab}_${data.currentIdx}_×">${q.options[1]}</label>
                         </div>
                     `;
                 }
+
+                const listeningCompleted = listeningCurrent >= listeningQuestions.length ? 'completed' : '';
+                const readingCompleted = readingCurrent >= readingQuestions.length ? 'completed' : '';
 
                 container.innerHTML = `
                     <div class="header">
@@ -513,6 +671,11 @@
                         <span class="timer-item">⏳ Sisa: <span id="perSoalTimerDisplay">${formatTime(perSoalTimeLeft)}</span></span>
                         <span class="timer-item">⌛ Total: <span id="globalTimerDisplay">${formatTime(globalTimeLeft)}</span></span>
                     </div>
+                    <div class="tab-bar">
+                        <div class="tab ${activeTab === 'listening' ? 'active' : ''} ${listeningCompleted}" id="tabListening">👂 Listening ${listeningCurrent}/${listeningQuestions.length}</div>
+                        <div class="tab ${activeTab === 'reading' ? 'active' : ''} ${readingCompleted}" id="tabReading">📖 Reading ${readingCurrent}/${readingQuestions.length}</div>
+                    </div>
+                    <div class="progress-info">Soal ke-${data.currentIdx+1} dari ${data.questions.length}</div>
                     <div class="question-box">
                         <div class="question-text">${q.question.replace(/\n/g, '<br>')}</div>
                         <div class="options" id="optionsContainer">
@@ -523,24 +686,39 @@
                     <div class="footer">🔔 Jangan nyontek, nanti kena rahasia Doraemon!</div>
                 `;
 
+                // Event listener radio
                 const radios = document.querySelectorAll('input[name="soal"]');
                 radios.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        userAnswers[currentIndex] = e.target.value;
+                        const dataNow = getCurrentData();
+                        dataNow.setAnswer(dataNow.currentIdx, e.target.value);
                     });
                 });
 
                 document.getElementById('submitBtn').addEventListener('click', () => {
-                    const selected = document.querySelector('input[name="soal"]:checked');
-                    if (!selected) {
-                        alert('Pilih jawaban dulu ya!');
-                        return;
+                    const success = submitJawaban();
+                    if (success) {
+                        document.getElementById('submitBtn').disabled = true;
+                        setTimeout(() => {
+                            // sudah di-handle di submitJawaban
+                        }, 200);
                     }
-                    userAnswers[currentIndex] = selected.value;
-                    document.getElementById('submitBtn').disabled = true;
-                    setTimeout(() => {
-                        lanjutKeSoalBerikutnya();
-                    }, 500);
+                });
+
+                // Tab switching
+                document.getElementById('tabListening').addEventListener('click', () => {
+                    if (activeTab !== 'listening') {
+                        activeTab = 'listening';
+                        perSoalTimeLeft = 60;
+                        renderSoal();
+                    }
+                });
+                document.getElementById('tabReading').addEventListener('click', () => {
+                    if (activeTab !== 'reading') {
+                        activeTab = 'reading';
+                        perSoalTimeLeft = 60;
+                        renderSoal();
+                    }
                 });
             }
 
@@ -548,17 +726,18 @@
                 testFinished = true;
                 clearAllIntervals();
 
-                let listeningBenar = 0, readingBenar = 0;
-                questions.forEach((q, idx) => {
-                    const jawabanUser = userAnswers[idx];
-                    const kunci = q.answer;
-                    if (jawabanUser === kunci) {
-                        if (q.part === 'listening') listeningBenar++;
-                        else readingBenar++;
-                    }
+                // Hitung benar listening
+                let listeningBenar = 0;
+                listeningQuestions.forEach((q, idx) => {
+                    if (listeningAnswers[idx] === q.answer) listeningBenar++;
                 });
+                let readingBenar = 0;
+                readingQuestions.forEach((q, idx) => {
+                    if (readingAnswers[idx] === q.answer) readingBenar++;
+                });
+
                 const totalBenar = listeningBenar + readingBenar;
-                const totalSoal = questions.length;
+                const totalSoal = listeningQuestions.length + readingQuestions.length;
                 const persen = (totalBenar / totalSoal * 100).toFixed(1);
                 const lulus = persen >= 90 ? '✅ LULUS' : '❌ TIDAK LULUS';
 
@@ -574,8 +753,8 @@
                         <div class="skor">${persen}%</div>
                         <div style="font-size:2rem; margin:10px;">${lulus}</div>
                         <div class="detail">
-                            <div>👂 Listening<br>${listeningBenar}/15</div>
-                            <div>📖 Reading<br>${readingBenar}/20</div>
+                            <div>👂 Listening<br>${listeningBenar}/${listeningQuestions.length}</div>
+                            <div>📖 Reading<br>${readingBenar}/${readingQuestions.length}</div>
                         </div>
                         <button class="btn-ulang" id="ulangBtn">🔄 Coba Lagi</button>
                     </div>
